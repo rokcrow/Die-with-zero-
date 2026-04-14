@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Die With Zero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0906;--bg2:#12100d;--bg3:#1a1712;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5dfa0;
+  --green:#4caf50;--green2:#81c784;
+  --purple:#9c27b0;--purple2:#ce93d8;
+  --blue:#2196f3;--blue2:#90caf9;
+  --red:#f44336;--red2:#ef9a9a;
+  --orange:#ff9800;--orange2:#ffcc02;
+  --text:#e8dcc8;--text2:#b0a090;--text3:#6b5d4f;
+  --card-w:6rem;--card-h:8.625rem;
+  --radius:0.5rem;--radius2:0.75rem;
+  font-size:16px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'EB Garamond',serif;overflow-x:hidden}
+#app{max-width:500px;margin:0 auto;min-height:100vh;position:relative;overflow:hidden}
+canvas#particles{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+/* ── TYPOGRAPHY ── */
+h1,h2,h3,.cinzel{font-family:'Cinzel',serif}
+.mono{font-family:'DM Mono',monospace}
+.gold{color:var(--gold2)}
+.dim{color:var(--text2)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;padding:0.5rem 1.25rem;border:none;border-radius:var(--radius);cursor:pointer;font-family:'Cinzel',serif;font-size:0.85rem;font-weight:700;letter-spacing:0.05em;transition:transform 0.1s,box-shadow 0.1s;user-select:none}
+.btn:active{transform:scale(0.97)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1200}
+.btn-gold:hover{box-shadow:0 0 16px var(--gold)}
+.btn-ghost{background:transparent;border:1px solid var(--text3);color:var(--text2)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-red{background:var(--red);color:#fff}
+.btn-full{width:100%}
+
+/* ── SPLASH SCREEN ── */
+.splash{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;position:relative;z-index:1}
+.splash-title{font-size:2.8rem;font-weight:900;letter-spacing:0.08em;line-height:1.1;background:linear-gradient(135deg,var(--gold),var(--gold3),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;margin-bottom:0.25rem}
+.splash-sub{color:var(--text2);font-size:1rem;font-style:italic;margin-bottom:2.5rem;letter-spacing:0.15em}
+.diff-group{display:flex;gap:0.75rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+.diff-btn{padding:0.6rem 1.2rem;border-radius:var(--radius);border:2px solid var(--text3);background:transparent;color:var(--text2);cursor:pointer;font-family:'Cinzel',serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;transition:all 0.2s}
+.diff-btn.active,.diff-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1)}
+.diff-desc{font-size:0.85rem;color:var(--text2);margin-bottom:2rem;min-height:2.5rem;font-style:italic}
+
+/* ── SETUP SCREEN ── */
+.setup{display:flex;flex-direction:column;padding:1.5rem;min-height:100vh;gap:1.25rem}
+.setup-header{text-align:center;padding:1rem 0}
+.setup-header h2{font-size:1.6rem;color:var(--gold2)}
+.field label{display:block;font-family:'Cinzel',serif;font-size:0.75rem;color:var(--text2);letter-spacing:0.1em;margin-bottom:0.4rem;text-transform:uppercase}
+.field input{width:100%;background:var(--bg3);border:1px solid var(--text3);border-radius:var(--radius);padding:0.7rem 1rem;color:var(--text);font-family:'EB Garamond',serif;font-size:1rem}
+.field input:focus{outline:none;border-color:var(--gold)}
+.arch-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.arch-card{background:var(--bg3);border:2px solid var(--text3);border-radius:var(--radius2);padding:1rem;cursor:pointer;transition:all 0.2s}
+.arch-card:hover,.arch-card.active{border-color:var(--gold);background:rgba(201,168,76,0.08)}
+.arch-card.active{box-shadow:0 0 12px rgba(201,168,76,0.3)}
+.arch-name{font-family:'Cinzel',serif;font-size:0.9rem;color:var(--gold2);margin-bottom:0.25rem}
+.arch-desc{font-size:0.8rem;color:var(--text2);line-height:1.4}
+
+/* ── GAME SCREEN ── */
+.game{display:flex;flex-direction:column;min-height:100vh;padding:0.75rem}
+.hud{background:var(--bg2);border-radius:var(--radius2);padding:0.75rem;margin-bottom:0.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.4rem}
+.hud-name{grid-column:1/-1;font-family:'Cinzel',serif;font-size:0.8rem;color:var(--gold2);letter-spacing:0.08em}
+.hud-stat{display:flex;flex-direction:column}
+.hud-label{font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em}
+.hud-val{font-family:'DM Mono',monospace;font-size:1rem;color:var(--text)}
+.hud-val.money{color:var(--green2)}
+.hud-val.xp{color:var(--gold2)}
+.window-badge{grid-column:1/-1;display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;font-family:'Cinzel',serif;letter-spacing:0.06em}
+.window-badge.young{color:var(--gold2)}
+.window-badge.active{color:var(--green2)}
+.window-badge.late{color:var(--blue2)}
+
+/* ── VITALITY BAR ── */
+.vitality-wrap{margin-bottom:0.5rem}
+.vitality-label{font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin-bottom:0.25rem}
+.vitality-track{height:0.5rem;background:var(--bg3);border-radius:99px;overflow:hidden}
+.vitality-fill{height:100%;border-radius:99px;transition:width 0.6s ease,background-color 1s ease}
+
+/* ── WARNING BANNERS ── */
+.banner{padding:0.5rem 0.75rem;border-radius:var(--radius);font-size:0.8rem;margin-bottom:0.5rem;font-style:italic}
+.banner-orange{background:rgba(255,152,0,0.15);border-left:3px solid var(--orange);color:var(--orange2)}
+.banner-red{background:rgba(244,67,54,0.15);border-left:3px solid var(--red);color:var(--red2)}
+
+/* ── ZONES ── */
+.zone{margin-bottom:0.5rem}
+.zone-label{font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;font-family:'DM Mono',monospace;margin-bottom:0.35rem}
+.card-row{display:flex;gap:0.4rem;flex-wrap:wrap;min-height:1rem}
+
+/* ── CARDS ── */
+.card{width:var(--card-w);min-height:var(--card-h);border-radius:var(--radius);border:1px solid rgba(255,255,255,0.1);background:var(--bg2);cursor:pointer;display:flex;flex-direction:column;overflow:hidden;position:relative;transition:transform 0.15s,box-shadow 0.15s;flex-shrink:0}
+.card:hover:not(.card-locked):not(.card-fate){transform:translateY(-4px);box-shadow:0 8px 20px rgba(0,0,0,0.5)}
+.card-stripe{height:0.3rem;width:100%;flex-shrink:0}
+.card-body{padding:0.35rem;flex:1;display:flex;flex-direction:column;gap:0.2rem}
+.card-name{font-family:'Cinzel',serif;font-size:0.58rem;line-height:1.2;color:var(--text);font-weight:700}
+.card-type{font-size:0.55rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em}
+.card-effect{font-size:0.58rem;color:var(--text2);line-height:1.3;flex:1;font-style:italic}
+.card-stats{display:flex;justify-content:space-between;margin-top:auto;font-family:'DM Mono',monospace;font-size:0.6rem}
+.card-cost{color:var(--green2)}
+.card-xp{color:var(--gold2)}
+
+/* card type colors */
+.stripe-experience{background:var(--gold)}
+.stripe-job{background:var(--green)}
+.stripe-fate{background:var(--purple)}
+.stripe-legacy{background:var(--blue)}
+.stripe-challenge{background:var(--red)}
+
+.card-fate{cursor:default;opacity:0.85}
+.card-locked{cursor:not-allowed;filter:brightness(0.5)}
+.card-locked::after{content:'🔒';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.5rem;background:rgba(0,0,0,0.4);border-radius:var(--radius)}
+
+/* card slide-in */
+@keyframes cardIn{from{transform:translateY(3.75rem) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
+.card-new{animation:cardIn 0.35s ease-out both}
+
+/* ── ACTION BAR ── */
+.action-bar{display:flex;gap:0.5rem;padding:0.5rem 0;margin-top:auto}
+.action-bar .btn{flex:1}
+
+/* ── DEATH SCREEN ── */
+.death{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center;background:radial-gradient(ellipse at center,#1a0a0a 0%,var(--bg) 70%)}
+@keyframes deathReveal{from{opacity:0;transform:scale(1.08);filter:blur(8px)}to{opacity:1;transform:scale(1);filter:blur(0)}}
+.death{animation:deathReveal 1.2s ease-in both}
+.death-skull{font-size:5rem;margin-bottom:1rem;filter:drop-shadow(0 0 20px rgba(244,67,54,0.6))}
+.death-title{font-family:'Cinzel',serif;font-size:2.5rem;font-weight:900;color:var(--red2);letter-spacing:0.1em;margin-bottom:0.5rem}
+.death-sub{color:var(--text2);font-style:italic;margin-bottom:1rem;font-size:1.1rem}
+.death-epitaph{color:var(--text2);font-style:italic;max-width:340px;line-height:1.6;font-size:0.95rem}
+
+/* ── END SCREEN ── */
+.end{display:flex;flex-direction:column;padding:1.5rem;min-height:100vh;gap:1rem}
+.score-ring{width:8rem;height:8rem;border-radius:50%;border:4px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto;box-shadow:0 0 30px rgba(201,168,76,0.3)}
+.score-num{font-family:'Cinzel',serif;font-size:2.2rem;font-weight:900;color:var(--gold2)}
+.score-label{font-size:0.65rem;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase}
+.grade-badge{font-family:'Cinzel',serif;font-size:1.8rem;font-weight:900;padding:0.2rem 1rem;border-radius:var(--radius);margin:0 auto;display:inline-block}
+.grade-S{background:rgba(201,168,76,0.2);color:var(--gold2);border:2px solid var(--gold)}
+.grade-A{background:rgba(76,175,80,0.2);color:var(--green2);border:2px solid var(--green)}
+.grade-B{background:rgba(33,150,243,0.2);color:var(--blue2);border:2px solid var(--blue)}
+.grade-C{background:rgba(255,152,0,0.2);color:var(--orange2);border:2px solid var(--orange)}
+.grade-D{background:rgba(244,67,54,0.2);color:var(--red2);border:2px solid var(--red)}
+.end-section{background:var(--bg2);border-radius:var(--radius2);padding:1rem}
+.end-section h3{font-family:'Cinzel',serif;font-size:0.85rem;color:var(--gold2);letter-spacing:0.08em;margin-bottom:0.75rem;border-bottom:1px solid var(--bg3);padding-bottom:0.4rem}
+.window-row{display:flex;justify-content:space-between;font-size:0.85rem;padding:0.25rem 0;border-bottom:1px solid var(--bg3)}
+.window-row:last-child{border-bottom:none}
+.memory-item{display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;font-size:0.85rem}
+.memory-xp{font-family:'DM Mono',monospace;color:var(--gold2);font-size:0.75rem;margin-left:auto}
+.obj-item{font-size:0.8rem;color:var(--green2);padding:0.15rem 0}
+.obj-item::before{content:'✓ '}
+
+/* ── FLOATERS ── */
+@keyframes floatUp{from{transform:translateY(0);opacity:1}to{transform:translateY(-3.75rem);opacity:0}}
+.floater{position:fixed;pointer-events:none;font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:500;animation:floatUp 1.2s ease-out both;z-index:9999;white-space:nowrap;transform:translateX(-50%)}
+
+/* ── WINDOW BANNER ── */
+@keyframes bannerShow{0%{opacity:0;transform:translate(-50%,-50%) scale(0.8)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-50%) scale(0.95)}}
+.window-banner{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:2px solid var(--gold);border-radius:var(--radius2);padding:1.25rem 2rem;text-align:center;z-index:1000;pointer-events:none;animation:bannerShow 2.2s ease both}
+.window-banner .wb-title{font-family:'Cinzel',serif;font-size:1.1rem;font-weight:700;letter-spacing:0.1em}
+.window-banner .wb-sub{font-size:0.8rem;color:var(--text2);margin-top:0.25rem;font-style:italic}
+
+/* ── SCROLLABLE HAND ── */
+.hand-scroll{display:flex;gap:0.4rem;overflow-x:auto;padding-bottom:0.5rem;scrollbar-width:thin;scrollbar-color:var(--text3) transparent}
+.hand-scroll::-webkit-scrollbar{height:3px}
+.hand-scroll::-webkit-scrollbar-thumb{background:var(--text3);border-radius:99px}
+
+/* ── MISC ── */
+.separator{height:1px;background:var(--bg3);margin:0.25rem 0}
+.empty-hint{font-size:0.75rem;color:var(--text3);font-style:italic;padding:0.5rem 0}
+</style>
+</head>
+<body>
+<canvas id="particles"></canvas>
+<div id="app"></div>
+<script>
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const ARCHETYPES = {
+  explorer: { name:'Explorer', emoji:'🧭', desc:'Start with +$3k. Bonus XP on experience cards.', startBonus:3000, xpMult:1, expBonus:8, salaryMult:1, legacyCostMult:1 },
+  achiever:  { name:'Achiever', emoji:'🏆', desc:'No money bonus. XP ×1.2 all game.',           startBonus:0,    xpMult:1.2, expBonus:0, salaryMult:1, legacyCostMult:1 },
+  connector: { name:'Connector',emoji:'🤝', desc:'Jobs give +20% salary each turn.',            startBonus:1000, xpMult:1, expBonus:0, salaryMult:1.2, legacyCostMult:1 },
+  creator:   { name:'Creator',  emoji:'🎨', desc:'Legacy cards cost 20% less.',                  startBonus:1500, xpMult:1, expBonus:0, salaryMult:1, legacyCostMult:0.8 },
+};
+
+const WARNINGS = [
+  'Your body feels heavier today...','A chill that won\'t go away.','Old friends have stopped calling.',
+  'You dream of unfinished things.','The doctor wants to see you again.','Time feels different lately.',
+  'Something feels... final.','The light seems dimmer somehow.','You\'ve started saying goodbye.',
+  'Your hands shake in the morning.','You wake up unsure of the day.',
+];
+const FALSE_POSITIVES = [
+  'Just a passing cold, nothing more.','You\'ve felt worse and survived.','Everyone gets tired sometimes.',
+  'A bad week. That\'s all.','You\'re stronger than you think.',
+];
+
+const EPITAPHS = [
+  'They spent every cent they had on living.','No regrets found in the ledger.',
+  'They chose experiences over accumulation.','They died with memories, not money.',
+  'A life fully spent is a life fully lived.','They left nothing on the table.',
+];
+
+const CARD_DECK = [
+  // ── EXPERIENCE ──
+  {id:'e01',name:'Backpacking Europe',type:'experience',cost:2500,xpValue:20,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 20 XP. Explorer: +8 bonus XP.'},
+  {id:'e02',name:'Skydiving',type:'experience',cost:1800,xpValue:16,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 16 XP. Thrill of a lifetime.'},
+  {id:'e03',name:'Learn Piano',type:'experience',cost:1200,xpValue:14,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 14 XP. A skill that lasts.'},
+  {id:'e04',name:'Scuba Dive the Reef',type:'experience',cost:2200,xpValue:18,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 18 XP. Beauty beneath the surface.'},
+  {id:'e05',name:'Road Trip Cross-Country',type:'experience',cost:1500,xpValue:15,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 15 XP. The open road awaits.'},
+  {id:'e06',name:'Write a Novel',type:'experience',cost:500,xpValue:12,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 12 XP. Tell your story.'},
+  {id:'e07',name:'Climb a Mountain',type:'experience',cost:3000,xpValue:24,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 24 XP. The view is worth it.'},
+  {id:'e08',name:'Volunteer Abroad',type:'experience',cost:2000,xpValue:22,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 22 XP. Give and receive.'},
+  {id:'e09',name:'Take a Sabbatical',type:'experience',cost:4000,xpValue:26,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 26 XP. Rest is not retreat.'},
+  {id:'e10',name:'Host a Dinner Party',type:'experience',cost:600,xpValue:10,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 10 XP. Connection over cuisine.'},
+  {id:'e11',name:'Build a Dream Home',type:'experience',cost:5000,xpValue:30,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 30 XP. Your sanctuary.'},
+  {id:'e12',name:'Learn a Language',type:'experience',cost:800,xpValue:13,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 13 XP. New worlds open.'},
+  {id:'e13',name:'Attend Burning Man',type:'experience',cost:2800,xpValue:21,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 21 XP. Radical self-expression.'},
+  {id:'e14',name:'Complete a Marathon',type:'experience',cost:400,xpValue:18,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 18 XP. Mind over miles.'},
+  {id:'e15',name:'Disney with the Kids',type:'experience',cost:3500,xpValue:28,salary:0,fateDamage:0,legacyOnly:false,effect:'Gain 28 XP. Memories for them too.'},
+  // ── JOB ──
+  {id:'j01',name:'Entry Analyst',type:'job',cost:0,xpValue:0,salary:1200,fateDamage:0,legacyOnly:false,effect:'Earn $1,200 each turn.'},
+  {id:'j02',name:'Freelance Designer',type:'job',cost:0,xpValue:0,salary:1800,fateDamage:0,legacyOnly:false,effect:'Earn $1,800 each turn.'},
+  {id:'j03',name:'Startup Founder',type:'job',cost:2000,xpValue:0,salary:3500,fateDamage:0,legacyOnly:false,effect:'Pay $2k to start. Earn $3,500/turn.'},
+  {id:'j04',name:'Corporate Manager',type:'job',cost:0,xpValue:0,salary:2800,fateDamage:0,legacyOnly:false,effect:'Earn $2,800 each turn.'},
+  {id:'j05',name:'Remote Consultant',type:'job',cost:0,xpValue:0,salary:2200,fateDamage:0,legacyOnly:false,effect:'Earn $2,200 each turn.'},
+  {id:'j06',name:'Real Estate Agent',type:'job',cost:500,xpValue:0,salary:2600,fateDamage:0,legacyOnly:false,effect:'Pay $500. Earn $2,600/turn.'},
+  {id:'j07',name:'School Teacher',type:'job',cost:0,xpValue:2,salary:1400,fateDamage:0,legacyOnly:false,effect:'Earn $1,400/turn + 2 XP/turn.'},
+  {id:'j08',name:'Medical Professional',type:'job',cost:3000,xpValue:0,salary:5000,fateDamage:0,legacyOnly:false,effect:'Pay $3k. Earn $5,000/turn.'},
+  {id:'j09',name:'Stock Trader',type:'job',cost:1000,xpValue:0,salary:3000,fateDamage:0,legacyOnly:false,effect:'Pay $1k. Earn $3,000/turn.'},
+  {id:'j10',name:'Skilled Tradesperson',type:'job',cost:0,xpValue:0,salary:2000,fateDamage:0,legacyOnly:false,effect:'Earn $2,000 each turn.'},
+  {id:'j11',name:'Author & Speaker',type:'job',cost:0,xpValue:3,salary:1600,fateDamage:0,legacyOnly:false,effect:'Earn $1,600/turn + 3 XP/turn.'},
+  {id:'j12',name:'Non-Profit Director',type:'job',cost:0,xpValue:5,salary:1500,fateDamage:0,legacyOnly:false,effect:'Earn $1,500/turn + 5 XP/turn.'},
+  {id:'j13',name:'Software Engineer',type:'job',cost:0,xpValue:0,salary:4000,fateDamage:0,legacyOnly:false,effect:'Earn $4,000 each turn.'},
+  {id:'j14',name:'Small Business Owner',type:'job',cost:2500,xpValue:0,salary:3800,fateDamage:0,legacyOnly:false,effect:'Pay $2.5k. Earn $3,800/turn.'},
+  {id:'j15',name:'Senior Executive',type:'job',cost:0,xpValue:0,salary:6000,fateDamage:0,legacyOnly:false,effect:'Earn $6,000 each turn.'},
+  // ── FATE ──
+  {id:'f01',name:'Medical Emergency',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:2500,legacyOnly:false,effect:'Drains $2,500 each turn until resolved.'},
+  {id:'f02',name:'Market Crash',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:3000,legacyOnly:false,effect:'Drains $3,000 each turn.'},
+  {id:'f03',name:'Divorce Proceedings',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:2000,legacyOnly:false,effect:'Drains $2,000 each turn. -5 XP.'},
+  {id:'f04',name:'Tax Audit',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:1800,legacyOnly:false,effect:'Drains $1,800 each turn.'},
+  {id:'f05',name:'Unexpected Layoff',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:1500,legacyOnly:false,effect:'Drains $1,500 each turn. Removes one Job.'},
+  {id:'f06',name:'Natural Disaster',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:4000,legacyOnly:false,effect:'Drains $4,000 this turn only.'},
+  {id:'f07',name:'Aging Parent Care',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:1200,legacyOnly:false,effect:'Drains $1,200 each turn. Gain 8 XP.'},
+  {id:'f08',name:'Chronic Illness',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:2200,legacyOnly:false,effect:'Drains $2,200 each turn.'},
+  {id:'f09',name:'Car Accident',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:2800,legacyOnly:false,effect:'Drains $2,800 this turn only.'},
+  {id:'f10',name:'Legal Dispute',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:2000,legacyOnly:false,effect:'Drains $2,000 each turn.'},
+  {id:'f11',name:'Identity Theft',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:1600,legacyOnly:false,effect:'Drains $1,600 each turn.'},
+  {id:'f12',name:'Home Repair Crisis',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:3500,legacyOnly:false,effect:'Drains $3,500 this turn only.'},
+  {id:'f13',name:'Inflation Wave',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:1000,legacyOnly:false,effect:'Drains $1,000 each turn.'},
+  {id:'f14',name:'Social Isolation',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'-10 XP. Silence costs more than money.'},
+  {id:'f15',name:'Regret Spiral',type:'fate',cost:0,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'-15 XP per turn you hold this.'},
+  // ── LEGACY ──
+  {id:'l01',name:'Endow a Scholarship',type:'legacy',cost:8000,xpValue:40,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 40 XP. Your name lives on.'},
+  {id:'l02',name:'Fund a Community Garden',type:'legacy',cost:4000,xpValue:28,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 28 XP. Growth beyond yourself.'},
+  {id:'l03',name:'Publish Your Memoirs',type:'legacy',cost:3000,xpValue:30,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 30 XP. Your story outlasts you.'},
+  {id:'l04',name:'Donate to Research',type:'legacy',cost:6000,xpValue:35,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 35 XP. A future gift.'},
+  {id:'l05',name:'Mentor Next Generation',type:'legacy',cost:2000,xpValue:25,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 25 XP. Wisdom transferred.'},
+  {id:'l06',name:'Leave Property to Heirs',type:'legacy',cost:5000,xpValue:22,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 22 XP. Shelter given forward.'},
+  {id:'l07',name:'Commission Public Art',type:'legacy',cost:7000,xpValue:38,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 38 XP. Beauty left behind.'},
+  {id:'l08',name:'Establish Family Trust',type:'legacy',cost:9000,xpValue:35,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 35 XP. Security for those you love.'},
+  {id:'l09',name:'Support a Cause',type:'legacy',cost:3500,xpValue:27,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 27 XP. Values made real.'},
+  {id:'l10',name:'Record Oral History',type:'legacy',cost:1500,xpValue:20,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 20 XP. Voices preserved.'},
+  {id:'l11',name:'Build Library Wing',type:'legacy',cost:10000,xpValue:45,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 45 XP. Knowledge left open.'},
+  {id:'l12',name:'Seed a Startup',type:'legacy',cost:8000,xpValue:32,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 32 XP. Ideas planted.'},
+  {id:'l13',name:'Charitable Foundation',type:'legacy',cost:12000,xpValue:50,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 50 XP. A life\'s work institutionalized.'},
+  {id:'l14',name:'Sponsor a Child\'s Education',type:'legacy',cost:5000,xpValue:33,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 33 XP. The best investment.'},
+  {id:'l15',name:'Leave Personal Letters',type:'legacy',cost:0,xpValue:15,salary:0,fateDamage:0,legacyOnly:true,effect:'Gain 15 XP. Words that last forever.'},
+  // ── CHALLENGE ──
+  {id:'c01',name:'Bet It All on Black',type:'challenge',cost:5000,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'50% chance: gain $10k or lose $5k.'},
+  {id:'c02',name:'Quit and Travel',type:'challenge',cost:3000,xpValue:35,salary:0,fateDamage:0,legacyOnly:false,effect:'Lose current job. Gain 35 XP.'},
+  {id:'c03',name:'Start Over at 50',type:'challenge',cost:0,xpValue:20,salary:0,fateDamage:0,legacyOnly:false,effect:'Discard hand. Draw 5 new cards. +20 XP.'},
+  {id:'c04',name:'Invest in a Friend\'s Dream',type:'challenge',cost:4000,xpValue:25,salary:0,fateDamage:0,legacyOnly:false,effect:'Pay $4k. 60% chance +$8k, else +25 XP only.'},
+  {id:'c05',name:'Reject the Promotion',type:'challenge',cost:0,xpValue:22,salary:0,fateDamage:0,legacyOnly:false,effect:'Remove your highest-paying job. +22 XP.'},
+  {id:'c06',name:'Go Off-Grid for a Year',type:'challenge',cost:2000,xpValue:30,salary:0,fateDamage:0,legacyOnly:false,effect:'No salary next turn. Gain 30 XP.'},
+  {id:'c07',name:'Ignore the Doctor\'s Orders',type:'challenge',cost:0,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'Remove one Fate card. -1 turn from lifespan.'},
+  {id:'c08',name:'Unpaid Internship',type:'challenge',cost:1000,xpValue:18,salary:0,fateDamage:0,legacyOnly:false,effect:'Pay $1k. Gain 18 XP + draw 2 extra cards.'},
+  {id:'c09',name:'Buy the Boat',type:'challenge',cost:7000,xpValue:28,salary:0,fateDamage:0,legacyOnly:false,effect:'Pay $7k. Gain 28 XP each turn it\'s active.'},
+  {id:'c10',name:'Move to a Foreign Country',type:'challenge',cost:3500,xpValue:32,salary:0,fateDamage:0,legacyOnly:false,effect:'Pay $3.5k. Gain 32 XP. Salary +$500/turn.'},
+  {id:'c11',name:'Cut Toxic Family Ties',type:'challenge',cost:0,xpValue:20,salary:0,fateDamage:0,legacyOnly:false,effect:'Remove one Fate card. +20 XP.'},
+  {id:'c12',name:'Startup Lottery',type:'challenge',cost:6000,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'Pay $6k. 40% chance: add Senior Executive job.'},
+  {id:'c13',name:'Refuse Inheritance Conditions',type:'challenge',cost:0,xpValue:28,salary:0,fateDamage:0,legacyOnly:false,effect:'+28 XP. Money -$2k. Principles over profit.'},
+  {id:'c14',name:'Pursue the Risky Passion',type:'challenge',cost:2500,xpValue:24,salary:500,fateDamage:0,legacyOnly:false,effect:'Pay $2.5k. +24 XP. Earn $500/turn.'},
+  {id:'c15',name:'Gamble the Retirement Fund',type:'challenge',cost:8000,xpValue:0,salary:0,fateDamage:0,legacyOnly:false,effect:'50% chance: +$20k or $0.'},
+];
+
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+const STATE = {
+  screen:'splash', difficulty:'normal',
+  playerName:'', archetype:null,
+  deathTurn:0, turn:0,
+  window:'young', windowJustChanged:false, prevWindow:'young',
+  money:0, totalMoneyEarned:0, totalMoneySpent:0,
+  dormantStreak:0, playedExperienceThisTurn:false,
+  xp:0, maxPossibleXP:0, totalDormantPenalty:0,
+  deck:[], hand:[], played:[], fateActive:[], discard:[],
+  windowLog:{ young:{xp:0,money:0}, active:{xp:0,money:0}, late:{xp:0,money:0} },
+  memoriesLog:[], objectivesCompleted:[],
+  dwzScore:0, grade:'',
+  newCardIds:[], // for slide-in animation tracking
+  warningMsg:'', lastWarningTurn:-5,
+  pendingChallengeId: null,
+};
+
+// ═══════════════════════════════════════
+// ENGINE
+// ═══════════════════════════════════════
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function rand(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
+
+function diffConfig(){
+  const d = STATE.difficulty;
+  return {
+    deathRange: d==='normal'?[12,20]:d==='hard'?[8,16]:[6,14],
+    dormantThreshold: d==='normal'?9000:d==='hard'?7000:5000,
+    dormantPenalty: d==='normal'?12:d==='hard'?16:20,
+    startMoney: d==='normal'?5000:d==='hard'?3500:2000,
+  };
+}
+
+function computeWindow(){
+  const pct = STATE.turn / STATE.deathTurn;
+  if(pct < 0.35) return 'young';
+  if(pct < 0.65) return 'active';
+  return 'late';
+}
+
+function xpMultiplier(){
+  const arch = ARCHETYPES[STATE.archetype];
+  const base = arch ? arch.xpMult : 1;
+  const w = STATE.window;
+  const wMult = w==='young'?1.5:w==='active'?1.2:0.6;
+  return base * wMult;
+}
+
+function isCardLocked(card){
+  if(card.type==='fate') return true; // fate never playable
+  if(card.legacyOnly && STATE.window!=='late') return true;
+  if(card.type==='experience' && STATE.window==='late') return true;
+  return false;
+}
+
+function initGame(){
+  const cfg = diffConfig();
+  const arch = ARCHETYPES[STATE.archetype] || ARCHETYPES.explorer;
+  STATE.deathTurn = rand(cfg.deathRange[0], cfg.deathRange[1]);
+  STATE.turn = 1;
+  STATE.window = 'young';
+  STATE.prevWindow = 'young';
+  STATE.windowJustChanged = false;
+  STATE.money = cfg.startMoney + arch.startBonus;
+  STATE.totalMoneyEarned = STATE.money;
+  STATE.totalMoneySpent = 0;
+  STATE.dormantStreak = 0;
+  STATE.playedExperienceThisTurn = false;
+  STATE.xp = 0;
+  STATE.totalDormantPenalty = 0;
+  STATE.deck = shuffle([...CARD_DECK]);
+  STATE.hand = [];
+  STATE.played = [];
+  STATE.fateActive = [];
+  STATE.discard = [];
+  STATE.windowLog = {young:{xp:0,money:0},active:{xp:0,money:0},late:{xp:0,money:0}};
+  STATE.memoriesLog = [];
+  STATE.objectivesCompleted = [];
+  STATE.dwzScore = 0;
+  STATE.grade = '';
+  STATE.newCardIds = [];
+  STATE.warningMsg = '';
+  STATE.lastWarningTurn = -5;
+  // compute max possible XP from non-fate, non-job cards in deck
+  STATE.maxPossibleXP = CARD_DECK.filter(c=>c.type!=='fate'&&c.type!=='job').reduce((s,c)=>s+c.xpValue,0);
+  drawCards(4);
+}
+
+function drawCards(n){
+  STATE.newCardIds = [];
+  for(let i=0;i<n;i++){
+    if(STATE.hand.length>=7) break;
+    if(STATE.deck.length===0){
+      STATE.deck = shuffle([...STATE.discard]);
+      STATE.discard = [];
+      if(STATE.deck.length===0) break;
+    }
+    const card = STATE.deck.shift();
+    if(card.type==='fate'){
+      // fate goes straight to active zone
+      const fateCopy = {...card, instanceId: card.id+'_'+Date.now()+'_'+Math.random()};
+      STATE.fateActive.push(fateCopy);
+      i--; // draw replacement
+    } else {
+      const copy = {...card, instanceId: card.id+'_'+Date.now()+'_'+Math.random()};
+      STATE.hand.push(copy);
+      STATE.newCardIds.push(copy.instanceId);
+    }
+  }
+}
+
+function addMoney(amt, source){
+  STATE.money += amt;
+  if(amt>0) STATE.totalMoneyEarned += amt;
+  // track window log
+  if(amt>0) STATE.windowLog[STATE.window].money += amt;
+}
+
+function addXP(amt){
+  const gained = Math.round(amt * xpMultiplier());
+  STATE.xp += gained;
+  STATE.windowLog[STATE.window].xp += gained;
+  return gained;
+}
+
+function playCard(instanceId){
+  const idx = STATE.hand.findIndex(c=>c.instanceId===instanceId);
+  if(idx===-1) return {ok:false,msg:'Card not in hand'};
+  const card = STATE.hand[idx];
+  if(isCardLocked(card)) return {ok:false,msg:'Card is locked'};
+
+  const arch = ARCHETYPES[STATE.archetype];
+  let cost = card.cost;
+  if(card.legacyOnly && arch) cost = Math.round(cost * arch.legacyCostMult);
+
+  if(STATE.money < cost) return {ok:false,msg:'Not enough money'};
+
+  // remove from hand
+  STATE.hand.splice(idx,1);
+
+  // pay cost
+  if(cost>0){
+    STATE.money -= cost;
+    STATE.totalMoneySpent += cost;
+  }
+
+  let xpGained = 0;
+
+  if(card.type==='experience'){
+    let base = card.xpValue;
+    if(arch && arch.expBonus) base += arch.expBonus;
+    xpGained = addXP(base);
+    STATE.playedExperienceThisTurn = true;
+    STATE.dormantStreak = 0;
+    STATE.memoriesLog.push({name:card.name,xp:xpGained,turn:STATE.turn});
+    STATE.discard.push(card);
+    checkObjectives(card,'play');
+    return {ok:true, xpGained, moneySpent:cost};
+  }
+
+  if(card.type==='job'){
+    if(card.cost>0){ /* already paid */ }
+    STATE.played.push({...card});
+    STATE.discard.push(card);
+    checkObjectives(card,'play');
+    return {ok:true, xpGained:0, moneySpent:cost};
+  }
+
+  if(card.type==='legacy'){
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+    STATE.dormantStreak = 0;
+    STATE.memoriesLog.push({name:card.name,xp:xpGained,turn:STATE.turn});
+    STATE.discard.push(card);
+    checkObjectives(card,'play');
+    return {ok:true, xpGained, moneySpent:cost};
+  }
+
+  if(card.type==='challenge'){
+    return resolveChallenge(card);
+  }
+
+  STATE.discard.push(card);
+  return {ok:true,xpGained:0,moneySpent:cost};
+}
+
+function resolveChallenge(card){
+  let xpGained = 0;
+  let moneyDelta = 0;
+  const roll = Math.random();
+
+  if(card.id==='c01'){ // Bet It All
+    if(roll<0.5){addMoney(10000,'challenge');moneyDelta=10000;}
+    else{STATE.money-=5000;STATE.totalMoneySpent+=5000;moneyDelta=-5000;}
+  } else if(card.id==='c02'){ // Quit and Travel
+    const jobIdx = STATE.played.findIndex(c=>c.type==='job');
+    if(jobIdx>=0) STATE.played.splice(jobIdx,1);
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c03'){ // Start Over
+    STATE.discard.push(...STATE.hand);
+    STATE.hand=[];
+    drawCards(5);
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c04'){ // Friend's Dream
+    if(roll<0.6){addMoney(8000,'challenge');moneyDelta=8000;}
+    else{xpGained=addXP(card.xpValue);STATE.playedExperienceThisTurn=true;}
+  } else if(card.id==='c05'){ // Reject Promotion
+    let maxSalary=0, maxIdx=-1;
+    STATE.played.forEach((c,i)=>{if(c.salary>maxSalary){maxSalary=c.salary;maxIdx=i;}});
+    if(maxIdx>=0) STATE.played.splice(maxIdx,1);
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c06'){ // Off-Grid
+    STATE._skipSalaryNextTurn = true;
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c07'){ // Ignore Doctor
+    if(STATE.fateActive.length>0) STATE.fateActive.shift();
+    STATE.deathTurn = Math.max(STATE.turn+1, STATE.deathTurn-1);
+  } else if(card.id==='c08'){ // Unpaid Internship
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+    drawCards(2);
+  } else if(card.id==='c09'){ // Buy the Boat
+    xpGained = addXP(card.xpValue);
+    STATE.played.push({...card, salary:0, xpPerTurn:card.xpValue});
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c10'){ // Move Abroad
+    xpGained = addXP(card.xpValue);
+    STATE.played.forEach(c=>{if(c.type==='job')c.salary+=500;});
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c11'){ // Cut Toxic Ties
+    if(STATE.fateActive.length>0) STATE.fateActive.shift();
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c12'){ // Startup Lottery
+    if(roll<0.4){
+      const exec = CARD_DECK.find(c=>c.id==='j15');
+      if(exec) STATE.played.push({...exec,instanceId:'exec_'+Date.now()});
+    }
+  } else if(card.id==='c13'){ // Refuse Inheritance
+    STATE.money -= 2000; STATE.totalMoneySpent += 2000;
+    moneyDelta = -2000;
+    xpGained = addXP(card.xpValue);
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c14'){ // Risky Passion
+    xpGained = addXP(card.xpValue);
+    STATE.played.push({...card, salary:card.salary});
+    STATE.playedExperienceThisTurn = true;
+  } else if(card.id==='c15'){ // Gamble Retirement
+    if(roll<0.5){addMoney(20000,'challenge');moneyDelta=20000;}
+    // else nothing
+  }
+
+  STATE.dormantStreak = 0;
+  STATE.memoriesLog.push({name:card.name,xp:xpGained,turn:STATE.turn});
+  STATE.discard.push(card);
+  checkObjectives(card,'play');
+  return {ok:true, xpGained, moneyDelta, moneySpent:card.cost||0};
+}
+
+function endTurn(){
+  // 1. Apply job salaries
+  if(!STATE._skipSalaryNextTurn){
+    const arch = ARCHETYPES[STATE.archetype];
+    const mult = arch ? arch.salaryMult : 1;
+    STATE.played.forEach(c=>{
+      if(c.salary && c.salary>0){
+        const pay = Math.round(c.salary * mult);
+        addMoney(pay,'salary');
+      }
+      if(c.xpValue>0 && c.type==='job'){
+        addXP(c.xpValue);
+      }
+      if(c.xpPerTurn){
+        addXP(c.xpPerTurn);
+      }
+    });
+  }
+  STATE._skipSalaryNextTurn = false;
+
+  // 2. Apply fate damage
+  const fateToRemove = [];
+  STATE.fateActive.forEach((f,i)=>{
+    if(f.fateDamage>0){
+      STATE.money -= f.fateDamage;
+      STATE.totalMoneySpent += f.fateDamage;
+    }
+    if(f.id==='f03') STATE.xp = Math.max(0,STATE.xp-5);
+    if(f.id==='f05'){ // Layoff removes a job
+      const jobIdx = STATE.played.findIndex(c=>c.type==='job');
+      if(jobIdx>=0) STATE.played.splice(jobIdx,1);
+      fateToRemove.push(i);
+    }
+    if(f.id==='f07') addXP(8); // Aging parent gives XP
+    if(f.id==='f14') STATE.xp = Math.max(0,STATE.xp-10);
+    if(f.id==='f15') STATE.xp = Math.max(0,STATE.xp-15);
+    // one-shot fates
+    if(f.id==='f06'||f.id==='f09'||f.id==='f12') fateToRemove.push(i);
+  });
+  fateToRemove.reverse().forEach(i=>STATE.fateActive.splice(i,1));
+
+  // 3. Dormant penalty check
+  const cfg = diffConfig();
+  if(STATE.money > cfg.dormantThreshold && !STATE.playedExperienceThisTurn){
+    STATE.dormantStreak++;
+    const penalty = cfg.dormantPenalty * STATE.dormantStreak;
+    STATE.xp = Math.max(0, STATE.xp - penalty);
+    STATE.totalDormantPenalty += penalty;
+  } else if(STATE.playedExperienceThisTurn){
+    STATE.dormantStreak = 0;
+  }
+
+  // 4. Window transition
+  const newWindow = computeWindow();
+  if(newWindow !== STATE.window){
+    STATE.prevWindow = STATE.window;
+    STATE.window = newWindow;
+    STATE.windowJustChanged = true;
+  }
+
+  // 5. Advance turn
+  STATE.turn++;
+  STATE.playedExperienceThisTurn = false;
+
+  // 6. Death check
+  if(STATE.turn > STATE.deathTurn){
+    computeScore();
+    STATE.screen = 'death';
+    render();
+    return;
+  }
+
+  // 7. Draw 3 cards
+  drawCards(3);
+
+  // 8. Near-death warning
+  maybeShowWarning();
+
+  render();
+  if(STATE.windowJustChanged){
+    showWindowBanner(STATE.window);
+    STATE.windowJustChanged = false;
+  }
+}
+
+function maybeShowWarning(){
+  const pct = STATE.turn / STATE.deathTurn;
+  if(pct >= 0.7 && STATE.turn - STATE.lastWarningTurn >= 2){
+    const pool = Math.random()<0.4 ? FALSE_POSITIVES : WARNINGS;
+    STATE.warningMsg = pool[Math.floor(Math.random()*pool.length)];
+    STATE.lastWarningTurn = STATE.turn;
+  } else if(pct < 0.7){
+    STATE.warningMsg = '';
+  }
+}
+
+function checkObjectives(card, event){
+  const objs = STATE.objectivesCompleted;
+  if(card.type==='legacy' && !objs.includes('First Legacy')) objs.push('First Legacy');
+  if(card.type==='challenge' && !objs.includes('Risk Taker')) objs.push('Risk Taker');
+  if(card.xpValue>=30 && !objs.includes('Big Memory')) objs.push('Big Memory');
+  if(STATE.played.filter(c=>c.type==='job').length>=3 && !objs.includes('Career Builder')) objs.push('Career Builder');
+  if(STATE.totalMoneySpent>=20000 && !objs.includes('Spendthrift')) objs.push('Spendthrift');
+  if(STATE.xp>=100 && !objs.includes('Rich Life')) objs.push('Rich Life');
+  if(STATE.fateActive.length===0 && STATE.turn>3 && !objs.includes('Fate Beater')) objs.push('Fate Beater');
+  if(STATE.dormantStreak===0 && STATE.turn>5 && !objs.includes('No Hoarding')) objs.push('No Hoarding');
+}
+
+function computeScore(){
+  const moneyRatio = STATE.totalMoneyEarned>0 ? STATE.totalMoneySpent/STATE.totalMoneyEarned : 0;
+  const xpRatio    = STATE.maxPossibleXP>0 ? Math.min(STATE.xp/STATE.maxPossibleXP,1) : 0;
+  const dormPenalty = Math.min(STATE.totalDormantPenalty * 0.5, 40);
+  const raw = (moneyRatio*50) + (xpRatio*50) - dormPenalty;
+  STATE.dwzScore = Math.max(0, Math.round(raw));
+  const s = STATE.dwzScore;
+  STATE.grade = s>=90?'S':s>=75?'A':s>=60?'B':s>=45?'C':'D';
+}
+
+// ═══════════════════════════════════════
+// RENDER HELPERS
+// ═══════════════════════════════════════
+function fmt$(n){ return '$'+Math.max(0,Math.round(n)).toLocaleString(); }
+function fmtXP(n){ return Math.round(n)+'xp'; }
+
+function renderCard(card, opts={}){
+  const locked = !opts.forceUnlock && isCardLocked(card);
+  const isNew  = STATE.newCardIds.includes(card.instanceId);
+  const delay  = opts.delay||0;
+  const classes = ['card',
+    `card-type-${card.type}`,
+    locked?'card-locked':'',
+    card.type==='fate'?'card-fate':'',
+    isNew?'card-new':'',
+  ].filter(Boolean).join(' ');
+
+  const costStr  = card.cost>0 ? `<span class="card-cost">-${fmt$(card.cost)}</span>` : '';
+  const xpStr    = card.xpValue>0 ? `<span class="card-xp">+${card.xpValue}xp</span>` : '';
+  const salStr   = card.salary>0 ? `<span class="card-cost" style="color:var(--green2)">+${fmt$(card.salary)}/t</span>` : '';
+  const dmgStr   = card.fateDamage>0 ? `<span style="color:var(--red2)">-${fmt$(card.fateDamage)}/t</span>` : '';
+
+  const action = (!locked && card.type!=='fate') ? `data-action="play-card" data-id="${card.instanceId}"` : '';
+
+  return `<div class="${classes}" ${action} style="animation-delay:${delay}ms">
+  <div class="card-stripe stripe-${card.type}"></div>
+  <div class="card-body">
+    <div class="card-name">${card.name}</div>
+    <div class="card-type">${card.type}</div>
+    <div class="card-effect">${card.effect}</div>
+    <div class="card-stats">${costStr}${salStr}${dmgStr}${xpStr}</div>
+  </div>
+</div>`;
+}
+
+function renderVitalityBar(){
+  const pct = Math.max(0, (STATE.deathTurn - STATE.turn + 1) / STATE.deathTurn);
+  const w = Math.round(pct * 100);
+  const color = pct>0.6?'#4caf50':pct>0.3?'#ff9800':'#f44336';
+  return `<div class="vitality-wrap">
+  <div class="vitality-label mono">Vitality</div>
+  <div class="vitality-track">
+    <div class="vitality-fill" style="width:${w}%;background-color:${color}"></div>
+  </div>
+</div>`;
+}
+
+// ═══════════════════════════════════════
+// SCREENS
+// ═══════════════════════════════════════
+function renderSplash(){
+  const diffs = ['normal','hard','brutal'];
+  const descs = {
+    normal:'12–20 turns · $9k dormant threshold · Standard XP',
+    hard:'8–16 turns · $7k dormant threshold · Harder XP',
+    brutal:'6–14 turns · $5k dormant threshold · Brutal XP',
+  };
+  const btns = diffs.map(d=>`<button class="diff-btn${STATE.difficulty===d?' active':''}" data-action="set-diff" data-id="${d}">${d.charAt(0).toUpperCase()+d.slice(1)}</button>`).join('');
+  return `<div class="splash">
+  <h1 class="splash-title">DIE<br>WITH<br>ZERO</h1>
+  <p class="splash-sub">A life fully spent</p>
+  <div class="diff-group">${btns}</div>
+  <p class="diff-desc">${descs[STATE.difficulty]}</p>
+  <button class="btn btn-gold btn-full" data-action="go-setup" style="max-width:240px">Begin Your Life →</button>
+</div>`;
+}
+
+function renderSetup(){
+  const archs = Object.entries(ARCHETYPES).map(([key,a])=>`
+  <div class="arch-card${STATE.archetype===key?' active':''}" data-action="set-arch" data-id="${key}">
+    <div class="arch-name">${a.emoji} ${a.name}</div>
+    <div class="arch-desc">${a.desc}</div>
+  </div>`).join('');
+  return `<div class="setup">
+  <div class="setup-header"><h2>Who Are You?</h2></div>
+  <div class="field">
+    <label>Your Name</label>
+    <input id="pname" type="text" maxlength="24" placeholder="Enter your name" value="${STATE.playerName}">
+  </div>
+  <div class="field"><label>Choose Your Archetype</label></div>
+  <div class="arch-grid">${archs}</div>
+  <div style="margin-top:auto;padding-top:1rem">
+    <div style="font-size:0.8rem;color:var(--text2);margin-bottom:0.75rem;font-style:italic">
+      Difficulty: <strong style="color:var(--gold2)">${STATE.difficulty}</strong>
+    </div>
+    <button class="btn btn-gold btn-full" data-action="start-game">Start Game →</button>
+  </div>
+</div>`;
+}
+
+function renderGame(){
+  const arch = ARCHETYPES[STATE.archetype];
+  const wLabels = {young:'Young',active:'Active',late:'Late'};
+  const wColors = {young:'var(--gold2)',active:'var(--green2)',late:'var(--blue2)'};
+  const cfg = diffConfig();
+
+  // HUD
+  const hud = `<div class="hud">
+  <div class="hud-name">${STATE.playerName} · ${arch?arch.emoji+' '+arch.name:''}</div>
+  <div class="hud-stat"><span class="hud-label">Turn</span><span class="hud-val mono">${STATE.turn}</span></div>
+  <div class="hud-stat"><span class="hud-label">Window</span><span class="hud-val" style="color:${wColors[STATE.window]};font-family:Cinzel,serif;font-size:0.85rem">${wLabels[STATE.window]}</span></div>
+  <div class="hud-stat"><span class="hud-label">Money</span><span class="hud-val money mono">${fmt$(STATE.money)}</span></div>
+  <div class="hud-stat"><span class="hud-label">XP</span><span class="hud-val xp mono">${fmtXP(STATE.xp)}</span></div>
+</div>`;
+
+  // Vitality
+  const vbar = renderVitalityBar();
+
+  // Warning banners
+  let banners = '';
+  if(STATE.dormantStreak>0){
+    banners += `<div class="banner banner-orange">⚠ Dormant Money — ${STATE.dormantStreak} turn streak. Playing no experiences while holding ${fmt$(cfg.dormantThreshold)}+ costs XP.</div>`;
+  }
+  if(STATE.warningMsg){
+    banners += `<div class="banner banner-red">💀 ${STATE.warningMsg}</div>`;
+  }
+
+  // Fate zone
+  const fateCards = STATE.fateActive.length>0
+    ? STATE.fateActive.map((c,i)=>renderCard(c,{delay:i*60})).join('')
+    : `<span class="empty-hint">No fate cards active</span>`;
+
+  // Played zone
+  const playedCards = STATE.played.length>0
+    ? STATE.played.map((c,i)=>renderCard(c,{forceUnlock:true,delay:i*40})).join('')
+    : `<span class="empty-hint">No cards in play</span>`;
+
+  // Hand
+  const handCards = STATE.hand.length>0
+    ? STATE.hand.map((c,i)=>renderCard(c,{delay:i*80})).join('')
+    : `<span class="empty-hint">Hand is empty</span>`;
+
+  return `<div class="game">
+  ${hud}
+  ${vbar}
+  ${banners}
+  <div class="zone">
+    <div class="zone-label">⚔ Fate Zone</div>
+    <div class="card-row">${fateCards}</div>
+  </div>
+  <div class="zone">
+    <div class="zone-label">📋 In Play</div>
+    <div class="card-row">${playedCards}</div>
+  </div>
+  <div class="separator"></div>
+  <div class="zone" style="margin-top:0.5rem">
+    <div class="zone-label">🃏 Your Hand (${STATE.hand.length}/7)</div>
+    <div class="hand-scroll">${handCards}</div>
+  </div>
+  <div class="action-bar">
+    <button class="btn btn-ghost" data-action="draw-card" ${STATE.hand.length>=7?'disabled':''}>Draw Card</button>
+    <button class="btn btn-gold" data-action="end-turn">End Turn →</button>
+  </div>
+</div>`;
+}
+
+function renderDeath(){
+  const epitaph = EPITAPHS[Math.floor(Math.random()*EPITAPHS.length)];
+  return `<div class="death">
+  <div class="death-skull">💀</div>
+  <div class="death-title">GAME OVER</div>
+  <div class="death-sub">${STATE.playerName} · Turn ${STATE.turn-1}</div>
+  <div class="death-epitaph">"${epitaph}"</div>
+  <div style="margin-top:2rem;color:var(--text3);font-size:0.8rem;font-style:italic">Calculating your DwZ Score...</div>
+</div>`;
+}
+
+function renderEnd(){
+  const s = STATE.dwzScore;
+  const gradeColor = {S:'var(--gold2)',A:'var(--green2)',B:'var(--blue2)',C:'var(--orange2)',D:'var(--red2)'}[STATE.grade]||'var(--text)';
+
+  // Window breakdown
+  const wRows = ['young','active','late'].map(w=>{
+    const wl = STATE.windowLog[w];
+    const label = {young:'Young',active:'Active',late:'Late'}[w];
+    const color = {young:'var(--gold2)',active:'var(--green2)',late:'var(--blue2)'}[w];
+    return `<div class="window-row">
+      <span style="color:${color};font-family:Cinzel,serif;font-size:0.8rem">${label}</span>
+      <span class="mono" style="font-size:0.8rem">${fmtXP(wl.xp)} · ${fmt$(wl.money)}</span>
+    </div>`;
+  }).join('');
+
+  // Top memories
+  const top5 = [...STATE.memoriesLog].sort((a,b)=>b.xp-a.xp).slice(0,5);
+  const memItems = top5.length>0
+    ? top5.map(m=>`<div class="memory-item"><span>${m.name}</span><span class="memory-xp">+${m.xp}xp (T${m.turn})</span></div>`).join('')
+    : '<div class="empty-hint">No memories recorded</div>';
+
+  // Objectives
+  const objItems = STATE.objectivesCompleted.length>0
+    ? STATE.objectivesCompleted.map(o=>`<div class="obj-item">${o}</div>`).join('')
+    : '<div class="empty-hint">No objectives completed</div>';
+
+  // Stats
+  const moneyRatio = STATE.totalMoneyEarned>0?Math.round(STATE.totalMoneySpent/STATE.totalMoneyEarned*100):0;
+
+  return `<div class="end">
+  <div style="text-align:center;padding:0.5rem 0">
+    <h2 class="cinzel" style="color:var(--gold2);font-size:1.4rem;letter-spacing:0.1em">Die With Zero</h2>
+    <p style="font-size:0.8rem;color:var(--text2);font-style:italic">${STATE.playerName} · ${STATE.difficulty}</p>
+  </div>
+  <div class="score-ring">
+    <div class="score-num">${s}</div>
+    <div class="score-label">DwZ Score</div>
+  </div>
+  <div style="text-align:center">
+    <span class="grade-badge grade-${STATE.grade}">Grade ${STATE.grade}</span>
+  </div>
+  <div class="end-section">
+    <h3>Life Windows</h3>
+    ${wRows}
+  </div>
+  <div class="end-section">
+    <h3>Top Memories</h3>
+    ${memItems}
+  </div>
+  <div class="end-section">
+    <h3>Objectives</h3>
+    ${objItems}
+  </div>
+  <div class="end-section">
+    <h3>Final Stats</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem;font-size:0.85rem">
+      <div class="dim">Turns Lived</div><div class="mono" style="text-align:right">${STATE.turn-1}</div>
+      <div class="dim">Money Spent</div><div class="mono" style="text-align:right;color:var(--green2)">${fmt$(STATE.totalMoneySpent)}</div>
+      <div class="dim">Spent Ratio</div><div class="mono" style="text-align:right">${moneyRatio}%</div>
+      <div class="dim">Total XP</div><div class="mono" style="text-align:right;color:var(--gold2)">${fmtXP(STATE.xp)}</div>
+      <div class="dim">Dormant Penalty</div><div class="mono" style="text-align:right;color:var(--orange2)">${Math.round(STATE.totalDormantPenalty)}xp</div>
+    </div>
+  </div>
+  <button class="btn btn-gold btn-full" data-action="play-again">Play Again</button>
+  <div style="height:1.5rem"></div>
+</div>`;
+}
+
+// ═══════════════════════════════════════
+// RENDER DISPATCHER
+// ═══════════════════════════════════════
+function render(){
+  const app = document.getElementById('app');
+  switch(STATE.screen){
+    case 'splash': app.innerHTML = renderSplash(); initParticles(); break;
+    case 'setup':  app.innerHTML = renderSetup();  stopParticles(); break;
+    case 'game':   app.innerHTML = renderGame();   stopParticles(); break;
+    case 'death':  app.innerHTML = renderDeath();  stopParticles();
+      setTimeout(()=>{ STATE.screen='end'; render(); }, 3600); break;
+    case 'end':    app.innerHTML = renderEnd();    break;
+  }
+  // Re-attach name input listener after setup render
+  if(STATE.screen==='setup'){
+    const inp = document.getElementById('pname');
+    if(inp) inp.addEventListener('input',e=>{ STATE.playerName = e.target.value; });
+  }
+}
+
+// ═══════════════════════════════════════
+// ANIMATIONS
+// ═══════════════════════════════════════
+let _particleRAF = null;
+let _particles = [];
+
+function initParticles(){
+  const canvas = document.getElementById('particles');
+  if(!canvas) return;
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  _particles = Array.from({length:60},()=>({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    vx:(Math.random()-0.5)*0.4,
+    vy:-Math.random()*0.5-0.2,
+    r: Math.random()*2+0.5,
+    alpha: Math.random()*0.5+0.1,
+    color: Math.random()<0.5?'#c9a84c':'#e8c97a',
+  }));
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    _particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.y<-5){p.y=canvas.height+5;p.x=Math.random()*canvas.width;}
+      if(p.x<0)p.x=canvas.width; if(p.x>canvas.width)p.x=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=p.color;
+      ctx.globalAlpha=p.alpha;
+      ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    _particleRAF = requestAnimationFrame(loop);
+  }
+  stopParticles();
+  loop();
+}
+
+function stopParticles(){
+  if(_particleRAF){ cancelAnimationFrame(_particleRAF); _particleRAF=null; }
+  const canvas = document.getElementById('particles');
+  if(canvas){ const ctx=canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
+
+function spawnFloater(text, color, x, y){
+  const el = document.createElement('div');
+  el.className='floater';
+  el.textContent=text;
+  el.style.cssText=`left:${x}px;top:${y}px;color:${color}`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1300);
+}
+
+function showWindowBanner(win){
+  const labels={young:'Young Window',active:'Active Window',late:'Late Window'};
+  const subs={
+    young:'XP ×1.5 · All cards available',
+    active:'XP ×1.2 · Most cards available',
+    late:'XP ×0.6 · Adventure cards locked · Legacy unlocked',
+  };
+  const colors={young:'var(--gold)',active:'var(--green)',late:'var(--blue)'};
+  const el = document.createElement('div');
+  el.className='window-banner';
+  el.style.borderColor=colors[win];
+  el.innerHTML=`<div class="wb-title" style="color:${colors[win]}">${labels[win]}</div>
+  <div class="wb-sub">${subs[win]}</div>`;
+  document.getElementById('app').appendChild(el);
+  setTimeout(()=>el.remove(),2300);
+}
+
+// ═══════════════════════════════════════
+// EVENT HANDLING
+// ═══════════════════════════════════════
+document.getElementById('app').addEventListener('click',function(e){
+  const el = e.target.closest('[data-action]');
+  if(!el) return;
+  const action = el.dataset.action;
+  const id     = el.dataset.id;
+
+  if(action==='set-diff'){ STATE.difficulty=id; render(); return; }
+  if(action==='go-setup'){ STATE.screen='setup'; render(); return; }
+  if(action==='set-arch'){ STATE.archetype=id; render(); return; }
+
+  if(action==='start-game'){
+    if(!STATE.playerName.trim()){ alert('Please enter your name.'); return; }
+    if(!STATE.archetype){ alert('Please choose an archetype.'); return; }
+    initGame();
+    STATE.screen='game';
+    render();
+    return;
+  }
+
+  if(action==='play-card'){
+    const result = playCard(id);
+    if(!result.ok){ return; }
+    // spawn floaters
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left + rect.width/2;
+    const cy = rect.top + rect.height/2;
+    if(result.xpGained>0) spawnFloater('+'+result.xpGained+'xp','#e8c97a',cx,cy-20);
+    if(result.moneySpent>0) spawnFloater('-'+fmt$(result.moneySpent),'#ef9a9a',cx,cy+10);
+    if(result.moneyDelta>0) spawnFloater('+'+fmt$(result.moneyDelta),'#81c784',cx,cy+10);
+    render();
+    return;
+  }
+
+  if(action==='draw-card'){
+    drawCards(1);
+    render();
+    return;
+  }
+
+  if(action==='end-turn'){
+    const rect = el.getBoundingClientRect();
+    const cx = rect.left+rect.width/2, cy=rect.top;
+    // salary preview floater
+    const arch = ARCHETYPES[STATE.archetype];
+    const mult = arch?arch.salaryMult:1;
+    const totalSalary = STATE.played.reduce((s,c)=>s+(c.salary||0)*mult,0);
+    if(totalSalary>0) spawnFloater('+'+fmt$(totalSalary),'#81c784',cx,cy-10);
+    endTurn();
+    return;
+  }
+
+  if(action==='play-again'){
+    STATE.screen='splash';
+    STATE.difficulty='normal';
+    STATE.playerName='';
+    STATE.archetype=null;
+    render();
+    return;
+  }
+});
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+render();
+</script>
+</body>
+</html>
