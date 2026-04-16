@@ -46,7 +46,7 @@ html,body{
 
 /* ══════════════════════════════
    SPLASH
-══════════════════════════════ */
+═════════════════════════ ═════ */
 #splash{
   background:radial-gradient(ellipse 100% 80% at 50% 30%,#251805 0%,#0b0906 100%);
   align-items:center;justify-content:center;
